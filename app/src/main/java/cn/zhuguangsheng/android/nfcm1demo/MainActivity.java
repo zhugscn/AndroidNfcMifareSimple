@@ -7,19 +7,24 @@ import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
+    private final static String TAG = MainActivity.class.getSimpleName();
 
     NfcAdapter nfcAdapter;
     TextView promt;
     EditText etReadPwd;
 
-    String strReadPwd = "FFFFFFFFFFFF";
+    //String strReadPwd = M1PasswordHolder.getPassword();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -39,7 +44,38 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        //默认不弹出软键盘
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+
+        etReadPwd.addTextChangedListener(myTextWatcher);
+        etReadPwd.setText(M1PasswordHolder.getPassword());
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        etReadPwd.removeTextChangedListener(myTextWatcher);
+    }
+
+    TextWatcher myTextWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            M1PasswordHolder.setPassword(etReadPwd.getText().toString().trim());//从文本框中取出密码
+
+            Log.i(TAG, "onTextChanged()...password=" + M1PasswordHolder.getPassword());
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+
+        }
+    };
 
     @Override
     protected void onResume() {
@@ -50,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
             processIntent(getIntent());
         }
 
-        hideSoftKeyBoard();
+        etReadPwd.setText(M1PasswordHolder.getPassword());
     }
 
     //字符序列转换为16进制字符串
@@ -89,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
         return (byte) "0123456789ABCDEF".indexOf(c);
     }
 
+    /*
     private void hideSoftKeyBoard() {
         View view = getWindow().peekDecorView();
         if (view != null){
@@ -96,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
             inputmanger.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
+    */
 
     /**
      * Parses the NDEF Message from the intent and prints to the TextView
@@ -134,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                     + mfc.getBlockCount() + "个块\n存储空间: " + mfc.getSize() + "B\n";
             for (int j = 0; j < sectorCount; j++) {
                 //Authenticate a sector with key A.
-                byte[] readPwdBytes = hexStringToBytes(strReadPwd);
+                byte[] readPwdBytes = hexStringToBytes(M1PasswordHolder.getPassword());
                 if (readPwdBytes == null) {
                     Toast.makeText(getApplicationContext(), "password format error 密码格式不对", Toast.LENGTH_SHORT).show();
                 }

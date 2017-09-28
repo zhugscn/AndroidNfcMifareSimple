@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content"
                 android:scrollbars="vertical"
                 android:singleLine="false"
-                android:text="123"/>
+                android:text="把M1卡靠近NFC读取区域,这里显示读取内容。M1的默认密码是FFFFFFFFFFFF"/>
     </ScrollView>
 
 </LinearLayout>
